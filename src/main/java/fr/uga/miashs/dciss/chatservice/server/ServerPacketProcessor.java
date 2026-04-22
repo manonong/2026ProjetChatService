@@ -17,32 +17,89 @@ import java.util.logging.Logger;
 import fr.uga.miashs.dciss.chatservice.common.Packet;
 
 public class ServerPacketProcessor implements PacketProcessor {
-	private final static Logger LOG = Logger.getLogger(ServerPacketProcessor.class.getName());
-	private ServerMsg server;
+    private final static Logger LOG = Logger.getLogger(ServerPacketProcessor.class.getName());
+    private ServerMsg server;
 
-	public ServerPacketProcessor(ServerMsg s) {
-		this.server = s;
-	}
 
-	@Override
-	public void process(Packet p) {
-		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream + DataInputStream à la place
-		ByteBuffer buf = ByteBuffer.wrap(p.data);
-		byte type = buf.get();
-		
-		if (type == 1) { // cas creation de groupe
-			createGroup(p.srcId,buf);
-		} else {
-			LOG.warning("Server message of type=" + type + " not handled by procesor");
-		}
-	}
-	
-	public void createGroup(int ownerId, ByteBuffer data) {
-		int nb = data.getInt();
-		GroupMsg g = server.createGroup(ownerId);
-		for (int i = 0; i < nb; i++) {
-			g.addMember(server.getUser(data.getInt()));
-		}
-	}
+    public ServerPacketProcessor(ServerMsg s) {
+        this.server = s;
+    }
 
+
+    @Override
+    public void process(Packet p) {
+        // ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream + DataInputStream à la place
+        ByteBuffer buf = ByteBuffer.wrap(p.data);
+        byte type = buf.get();
+       
+        if (type == 1) { // cas creation de groupe
+            createGroup(p.srcId,buf);
+        } else {
+            LOG.warning("Server message of type=" + type + " not handled by procesor");
+        }
+   
+
+
+        if (type == 2) { // suppression groupe
+            leaveGroup(p.srcId, buf);
+        }
+
+
+        if (type == 3){//ajouter un user dans un groupe
+
+
+        }
+
+
+        if (type == 4){//retirer un user dans un groupe
+
+
+        }  
+       
+        if (type == 5){//changer le nom d'un groupe
+
+
+        }  
+       
+        if (type == 6){//transferer la propriété d'un groupe
+
+
+        }  
+
+
+        if (type == 7){//supprimer un groupe
+
+
+        }
+
+
+        if (type == 8){//modifier son username
+
+
+        }
+       
+
+
+    }
+
+
+   
+    public void createGroup(int ownerId, ByteBuffer data) {
+        int nb = data.getInt();
+        GroupMsg g = server.createGroup(ownerId);
+        for (int i = 0; i < nb; i++) {
+            g.addMember(server.getUser(data.getInt()));
+        }
+    }
+
+
+    public void leaveGroup(int userId, ByteBuffer data) { //data est l'id du groupe à quitter
+        int groupId = data.getInt();
+        GroupMsg g = server.getGroup(groupId);
+        if (g != null) { // si le groupe id existe fait
+            g.removeMember(server.getUser(userId));
+        }
+    }
 }
+
+

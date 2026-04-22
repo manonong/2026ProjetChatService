@@ -79,6 +79,11 @@ public class ServerMsg {
 	public UserMsg getUser(int userId) {
 		return users.get(userId);
 	}
+
+	public GroupMsg getGroup(int groupId) {
+    	return groups.get(groupId);
+    }
+
 	
 	// Methode utilisée pour savoir quoi faire d'un paquet
 	// reçu par le serveur
