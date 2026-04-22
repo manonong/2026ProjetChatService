@@ -26,22 +26,33 @@ public class ServerPacketProcessor implements PacketProcessor {
 
 	@Override
 	public void process(Packet p) {
-		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream + DataInputStream à la place
+		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream +
+		// DataInputStream à la place
 		ByteBuffer buf = ByteBuffer.wrap(p.data);
 		byte type = buf.get();
-		
+
 		if (type == 1) { // cas creation de groupe
-			createGroup(p.srcId,buf);
+			createGroup(p.srcId, buf);
 		} else {
 			LOG.warning("Server message of type=" + type + " not handled by procesor");
 		}
 	}
-	
+
 	public void createGroup(int ownerId, ByteBuffer data) {
 		int nb = data.getInt();
 		GroupMsg g = server.createGroup(ownerId);
 		for (int i = 0; i < nb; i++) {
-			g.addMember(server.getUser(data.getInt()));
+			int userId = data.getInt();
+			UserMsg u = server.getUser(userId);
+
+			if (u != null) {
+				boolean added = g.addMember(u);
+				if (added) {
+					server.getDb().insertMember(g.getId(), u.getId());
+				}
+			} else {
+				System.out.println("USER " + userId + " NOT FOUND");
+			}
 		}
 	}
 
