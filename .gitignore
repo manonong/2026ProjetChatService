@@ -162,3 +162,9 @@ fabric.properties
 hs_err_pid*
 replay_pid*
 
+.vscode/
+*.db
+target/
+
+.DS_Store
+target/
