@@ -18,18 +18,38 @@ public class DatabaseManager {
     private void initTables() throws SQLException {
         Statement stmt = cnx.createStatement();
 
+        //TABLE USER ******************
         try {
             stmt.executeUpdate(
-                "CREATE TABLE Groups (groupId INT PRIMARY KEY, ownerId INT)"
+                "CREATE TABLE User (userId INT AUTO_INCREMENT PRIMARY KEY NOT NULL, nom VARCHAR(20) NOT NULL UNIQUE)"
+            );
+        } catch (SQLException ignored) {}
+        
+        //TABLE GROUP *****************
+        try {
+            stmt.executeUpdate(
+                "CREATE TABLE Group (groupId INT AUTO_INCREMENT PRIMARY KEY NOT NULL, ownerId INT NOT NULL, nomGroup VARCHAR(20) NOT NULL, nbMembers INT NOT NULL)"
             );
         } catch (SQLException ignored) {}
 
+        //TABLE GROUPMEMBERS **********
         try {
             stmt.executeUpdate(
                 "CREATE TABLE GroupMembers (groupId INT, userId INT, PRIMARY KEY (groupId, userId))"
             );
         } catch (SQLException ignored) {}
+
+        //TABLE CONTACT ****************
+        // try {
+        //     stmt.executeUpdate(
+        //         "CREATE TABLE Contact (ownerId INT NOT NULL, contactId INT NOT NULL, nickname VARCHAR(20) NOT NULL, PRIMARY KEY (userId, contactId))"
+        //     );
+        // } catch (SQLException ignored) {}
+
+        //TABLE HISTORIQUE *************
+        //TODO Créer la table Historique
     }
+
 
     // ===== GROUP =====
     public void insertGroup(int groupId, int ownerId) {
