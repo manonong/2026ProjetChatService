@@ -369,7 +369,6 @@ public class ClientMsg {
                        
                         if (actionGroupe==3) {//gérer un groupe existant avec les droits owner
                             try {
-                                //1ere étape choisir le groupe, TODO puis 
 			                    System.out.println("Quel groupe voulez-vous éditer ?");								
                             	int idGroup = Integer.parseInt(sc.nextLine());			
 

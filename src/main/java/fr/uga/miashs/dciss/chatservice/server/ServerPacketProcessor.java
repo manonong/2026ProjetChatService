@@ -35,11 +35,13 @@ public class ServerPacketProcessor implements PacketProcessor {
 		
 		if (type == 1) { // cas creation de groupe
 			createGroup(p.srcId,buf);
-		} else {
-			LOG.warning("Server message of type=" + type + " not handled by procesor");
 		}
-		        if (type == 2) { // suppression groupe
-            leaveGroup(p.srcId, buf);
+		// } else {
+		// 	LOG.warning("Server message of type=" + type + " not handled by procesor");
+		// }
+
+		if (type == 2) { // suppression groupe
+        leaveGroup(p.srcId, buf);
         }
 
 
