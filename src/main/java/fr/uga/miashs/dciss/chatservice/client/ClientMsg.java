@@ -390,20 +390,7 @@ public void sendFile(int destId, String filePath) {
         System.out.println("Mauvais format");
                     }
                 }
-				if (action == 6) { // envoyer un fichier
-    try {
-        System.out.println("A qui envoyer ?");
-        int dest = Integer.parseInt(sc.nextLine());
-
-        System.out.println("Chemin du fichier ?");
-        String path = sc.nextLine();
-
-        c.sendFile(dest, path);
-
-    } catch (Exception e) {
-        System.out.println("Erreur fichier");
-    }
-}
+	
 
 
                 if (action==2) { //gérer un groupe
@@ -550,6 +537,20 @@ public void sendFile(int destId, String filePath) {
 				if(action==5){
     				DatabaseManager.showAllMessages();
 				}
+                if (action == 6) { // envoyer un fichier
+                try {
+                 System.out.println("A qui envoyer ?");
+                int dest = Integer.parseInt(sc.nextLine());
+
+                System.out.println("Chemin du fichier ?");
+                String path = sc.nextLine();
+
+                 c.sendFile(dest, path);
+
+                } catch (Exception e) {
+                    System.out.println("Erreur fichier");
+                    }
+                }
        
                 if (action==3) {//gestion des contacts
                     try{
@@ -604,12 +605,15 @@ public void sendFile(int destId, String filePath) {
 
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Mauvais format");
+                
             }
 			
 
         }
 	}
+    
 }
+
 
         //permet à un user de créer un groupe
         //TODO
