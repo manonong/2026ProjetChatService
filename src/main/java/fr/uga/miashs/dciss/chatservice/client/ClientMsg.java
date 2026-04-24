@@ -559,23 +559,7 @@ public void sendFile(int destId, String filePath) {
                         // TODO: handle exception
                     }
                 }
-				if(action==5){
-    				DatabaseManager.showAllMessages();
-				}
-                if (action == 6) { // envoyer un fichier
-                try {
-                 System.out.println("A qui envoyer ?");
-                int dest = Integer.parseInt(sc.nextLine());
-
-                System.out.println("Chemin du fichier ?");
-                String path = sc.nextLine();
-
-                 c.sendFile(dest, path);
-
-                } catch (Exception e) {
-                    System.out.println("Erreur fichier");
-                    }
-                }
+				
        
                 if (action==3) {//gestion des contacts
                     try{
@@ -613,14 +597,31 @@ public void sendFile(int destId, String filePath) {
 					}
 				}
 
-				if (action == 4) {// gestion utilisateur, pour le moment que modifier son nom
-					try {
-
-					} catch (Exception e) {
-						// TODO: handle exception }
-					}
-
+                if(action==4){//gestion utilisateur, pour le moment que modifier son nom
+                    try {
+                       
+                    } catch (Exception e) {
+                        // TODO: handle exception                       }
+                    }
+                   
+                }
+                if(action==5){
+    				DatabaseManager.showAllMessages();
 				}
+                if (action == 6) { // envoyer un fichier
+                try {
+                 System.out.println("A qui envoyer ?");
+                int dest = Integer.parseInt(sc.nextLine());
+
+                System.out.println("Chemin du fichier ?");
+                String path = sc.nextLine();
+
+                 c.sendFile(dest, path);
+
+                } catch (Exception e) {
+                    System.out.println("Erreur fichier");
+                    }
+                }
 
 
             } catch (InputMismatchException | NumberFormatException e) {
