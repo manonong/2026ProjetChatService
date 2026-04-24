@@ -17,22 +17,20 @@ import java.util.logging.Logger;
 import fr.uga.miashs.dciss.chatservice.common.Packet;
 
 public class ServerPacketProcessor implements PacketProcessor {
-    private final static Logger LOG = Logger.getLogger(ServerPacketProcessor.class.getName());
-    private ServerMsg server;
+	private final static Logger LOG = Logger.getLogger(ServerPacketProcessor.class.getName());
+	private ServerMsg server;
 
-
-    public ServerPacketProcessor(ServerMsg s) {
-        this.server = s;
-    }
-	
-
+	public ServerPacketProcessor(ServerMsg s) {
+		this.server = s;
+	}
 
 	@Override
 	public void process(Packet p) {
-		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream + DataInputStream à la place
+		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream +
+		// DataInputStream à la place
 		ByteBuffer buf = ByteBuffer.wrap(p.data);
 		byte type = buf.get();
-		
+
 		if (type == 1) { // cas creation de groupe
 			createGroup(p.srcId,buf);
 		}
@@ -79,8 +77,6 @@ public class ServerPacketProcessor implements PacketProcessor {
        
 
 
-    }
-	
 	public void createGroup(int ownerId, ByteBuffer data) {
 		int nb = data.getInt();
 		GroupMsg g = server.createGroup(ownerId);
@@ -153,5 +149,3 @@ public class ServerPacketProcessor implements PacketProcessor {
 
 
 }
-
-
