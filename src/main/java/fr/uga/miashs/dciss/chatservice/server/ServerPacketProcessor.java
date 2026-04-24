@@ -17,41 +17,37 @@ import java.util.logging.Logger;
 import fr.uga.miashs.dciss.chatservice.common.Packet;
 
 public class ServerPacketProcessor implements PacketProcessor {
-    private final static Logger LOG = Logger.getLogger(ServerPacketProcessor.class.getName());
-    private ServerMsg server;
+	private final static Logger LOG = Logger.getLogger(ServerPacketProcessor.class.getName());
+	private ServerMsg server;
 
-
-    public ServerPacketProcessor(ServerMsg s) {
-        this.server = s;
-    }
-	
-
+	public ServerPacketProcessor(ServerMsg s) {
+		this.server = s;
+	}
 
 	@Override
 	public void process(Packet p) {
-		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream + DataInputStream à la place
+		// ByteBufferVersion. On aurait pu utiliser un ByteArrayInputStream +
+		// DataInputStream à la place
 		ByteBuffer buf = ByteBuffer.wrap(p.data);
 		byte type = buf.get();
-		
+
 		if (type == 1) { // cas creation de groupe
-			createGroup(p.srcId,buf);
+			createGroup(p.srcId, buf);
 		} else {
 			LOG.warning("Server message of type=" + type + " not handled by procesor");
 		}
-		        if (type == 2) { // suppression groupe
-            leaveGroup(p.srcId, buf);
-        }
+		if (type == 2) { // suppression groupe
+			leaveGroup(p.srcId, buf);
+		}
 
+		if (type == 3) {// ajouter un user dans un groupe
+			addUserGroup(p.srcId, buf);
 
-        if (type == 3){//ajouter un user dans un groupe
-
-
-        }
+		}
 
 
         if (type == 4){//retirer un user dans un groupe
-
-
+			deleteUserGroup(p.srcId, buf);
         }  
        
         if (type == 5){//changer le nom d'un groupe
@@ -60,7 +56,7 @@ public class ServerPacketProcessor implements PacketProcessor {
         }  
        
         if (type == 6){//transferer la propriété d'un groupe
-
+			transferOwnership(p.srcId, buf);
 
         }  
 
@@ -73,16 +69,21 @@ public class ServerPacketProcessor implements PacketProcessor {
 
         if (type == 8){//modifier son username
 
+		}
 
-        }
-       
+	}
 
+	private String readString(ByteBuffer buf) {
+		int length = buf.getInt();
+		byte[] bytes = new byte[length];
+		buf.get(bytes);
+		return new String(bytes);
+	}
 
-    }
-	
 	public void createGroup(int ownerId, ByteBuffer data) {
+		String groupName = readString(data);
 		int nb = data.getInt();
-		GroupMsg g = server.createGroup(ownerId);
+		GroupMsg g = server.createGroup(ownerId, groupName);
 		for (int i = 0; i < nb; i++) {
 			int userId = data.getInt();
 			UserMsg u = server.getUser(userId);
@@ -98,14 +99,47 @@ public class ServerPacketProcessor implements PacketProcessor {
 		}
 	}
 
+	public void leaveGroup(int userId, ByteBuffer data) { // data est l'id du groupe à quitter
+		int groupId = data.getInt();
+		GroupMsg g = server.getGroup(groupId);
+		if (g != null) { // si le groupe id existe fait
+			g.removeMember(server.getUser(userId));
+		}
+	}
 
-    public void leaveGroup(int userId, ByteBuffer data) { //data est l'id du groupe à quitter
-        int groupId = data.getInt();
-        GroupMsg g = server.getGroup(groupId);
-        if (g != null) { // si le groupe id existe fait
-            g.removeMember(server.getUser(userId));
-        }
-    }
+	public void addUserGroup(int userId, ByteBuffer data) {
+		int groupId = data.getInt();// lit positions 1-4, curseur passe à 5
+		int addedUserId = data.getInt();// lit positions 5-8, curseur passe à 9
+
+		GroupMsg g = server.getGroup(groupId);
+		if (g == null)
+			return;
+
+		////// vérifie si qd t'ajoutes un membre il faut que tu sois owner
+		g.addMemberIfOwner(userId, server.getUser(addedUserId));
+	}
+
+	public void deleteUserGroup(int userId, ByteBuffer data){
+		int groupId = data.getInt();// lit positions 1-4, curseur passe à 5
+		int deleteUserId = data.getInt();// lit positions 5-8, curseur passe à 9
+
+		GroupMsg g = server.getGroup(groupId);
+		if (g==null) return; //groupe existe pas
+
+		g.deleteMemberIfOwner(userId, server.getUser(deleteUserId)); //vérifie si admin
+	}	
+
+	public void transferOwnership(int userId, ByteBuffer data){
+		int groupId = data.getInt();// lit positions 1-4, curseur passe à 5
+		int newOwnerId = data.getInt();// lit positions 5-8, curseur passe à 9	
+		
+		GroupMsg g = server.getGroup(groupId);
+		if (g==null) return; //groupe existe pas
+
+    	g.transferOwnerIfOwner(userId, server.getUser(newOwnerId));
+	}
+
+
 }
 
 

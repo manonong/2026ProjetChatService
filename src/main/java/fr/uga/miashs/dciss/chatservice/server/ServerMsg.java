@@ -57,15 +57,16 @@ public class ServerMsg {
 		return db;
 	}
 
-	public GroupMsg createGroup(int ownerId) {
+	public GroupMsg createGroup(int ownerId, String groupName) {
 		UserMsg owner = users.get(ownerId);
 		if (owner == null)
 			throw new ServerException("User with id=" + ownerId + " unknown. Group creation failed.");
 		int id = nextGroupId.getAndDecrement();
 		GroupMsg res = new GroupMsg(id, owner);
+		String name = groupName;
 		groups.put(id, res);
 
-		db.insertGroup(id, ownerId);
+		db.insertGroup(id, ownerId, name);
 		db.insertMember(id, ownerId);
 		LOG.info("Group " + res.getId() + " created");
 		return res;

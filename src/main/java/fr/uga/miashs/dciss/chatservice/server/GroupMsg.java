@@ -37,7 +37,7 @@ public class GroupMsg implements PacketProcessor {
 	public int getId() { //getter
 		return groupId;
 	}
-	
+
 	/**
 	 * This method has to be used to add a member to the group.
 	 * It update the bidirectional relationship, i.e. the user is added to the group and the the group is added to the user.
@@ -85,4 +85,21 @@ public class GroupMsg implements PacketProcessor {
 		//avant de supprimer un groupe, permet de retirer le groupe du répertoire des membres
 	}
 
+	public boolean addMemberIfOwner(int requesterId, UserMsg newMember) {
+    if (owner.getId() != requesterId) return false;
+    return addMember(newMember);
+}
+
+	public boolean deleteMemberIfOwner(int requesterId, UserMsg removedMember) {
+    if (owner.getId() != requesterId) return false;
+    return removeMember(removedMember);
+}
+
+	public boolean transferOwnerIfOwner(int requesterId, UserMsg newOwner) {
+	    if (owner.getId() != requesterId) return false;  // pas le owner
+    	if (newOwner == null) return false;              // user inexistant
+	    if (!members.contains(newOwner)) return false;   // doit déjà être membre
+    	owner = newOwner;
+    	return true;
+}
 }
