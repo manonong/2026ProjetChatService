@@ -18,15 +18,17 @@ import fr.uga.miashs.dciss.chatservice.common.Packet;
 
 public class GroupMsg implements PacketProcessor {
 
-	private int groupId;
-	private UserMsg owner;
-	private Set<UserMsg> members;
+	private int groupId; //id du groupe, négatif
+	private String nomGroupe;
+	private UserMsg owner; //proprietaire du groupe, càd celui qui le crée
+	private Set<UserMsg> members; //ensemble des membres du groupe
 	
 	public GroupMsg(int groupId, UserMsg owner) {
 		if (groupId>-1) throw new IllegalArgumentException("id must not be less than 0");
 		if (owner==null) throw new IllegalArgumentException("owner cannot be null");
 		this.groupId=groupId;
 		this.owner=owner;
+		this.nomGroupe = String.valueOf(groupId); //par défaut, le nom du groupe est le numéro de l'id
 		members=Collections.synchronizedSet(new HashSet<>());
 		addMember(owner);
 	}
@@ -78,4 +80,27 @@ public class GroupMsg implements PacketProcessor {
 		members.forEach(m->m.getGroups().remove(this));
 	}
 
+	public boolean addMemberIfOwner(int requesterId, UserMsg newMember) {
+    if (owner.getId() != requesterId) return false;
+    return addMember(newMember);
+	}
+
+	public boolean deleteMemberIfOwner(int requesterId, UserMsg removedMember) {
+    if (owner.getId() != requesterId) return false;
+    return removeMember(removedMember);
+	}
+
+	public boolean transferOwnerIfOwner(int requesterId, UserMsg newOwner) {
+	    if (owner.getId() != requesterId) return false;  // pas le owner
+    	if (newOwner == null) return false;              // user inexistant
+	    if (!members.contains(newOwner)) return false;   // doit déjà être membre
+    	owner = newOwner;
+    	return true;
+	}
+
+	public boolean deleteIfOwner(int requesterId){
+	    if (owner.getId() != requesterId) return false;  // pas le owner
+		beforeDelete();
+		return true;
+	}
 }
