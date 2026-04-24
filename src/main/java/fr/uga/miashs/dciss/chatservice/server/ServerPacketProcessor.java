@@ -38,46 +38,108 @@ public class ServerPacketProcessor implements PacketProcessor {
 		} else {
 			LOG.warning("Server message of type=" + type + " not handled by procesor");
 		}
-		        if (type == 2) { // suppression groupe
+		
+        if (type == 2) { // suppression groupe
             leaveGroup(p.srcId, buf);
+
+        }else if (type == 3) { // ajouter un user dans un groupe
+            int groupId = buf.getInt();
+            int userId = buf.getInt();
+
+            GroupMsg g = server.getGroup(groupId);
+            UserMsg u = server.getUser(userId);
+
+            if (g != null && u != null) {
+                g.addMember(u);
+            } else {
+        LOG.warning("Add member failed: group or user not found");
+            }
         }
 
+        else if (type == 4) { // retirer un user d'un groupe
+            int groupId = buf.getInt();
+            int userId = buf.getInt();
 
-        if (type == 3){//ajouter un user dans un groupe
+            GroupMsg g = server.getGroup(groupId);
+            UserMsg u = server.getUser(userId);
 
-
-        }
-
-
-        if (type == 4){//retirer un user dans un groupe
-
-
-        }  
+            if (g != null && u != null) {
+                g.removeMember(u);
+            } else {
+                LOG.warning("Remove member failed: group or user not found");
+            }
+        } 
        
-        if (type == 5){//changer le nom d'un groupe
+        else if (type == 5) { // changer le nom d'un groupe
+            int groupId = buf.getInt();
 
+            int length = buf.getInt(); // longueur du nom
+            byte[] nameBytes = new byte[length];
+            buf.get(nameBytes);
+            String newName = new String(nameBytes);
 
-        }  
+            GroupMsg g = server.getGroup(groupId);
+
+            if (g != null) {
+                // vérifie que l'expéditeur est le propriétaire
+                if (g.getOwner().getId() == p.srcId) {
+                    g.setName(newName);
+                } else {
+                    LOG.warning("Rename refused: user is not owner");
+                }
+            } else {
+                LOG.warning("Rename failed: group not found");
+            }
+        }
        
-        if (type == 6){//transferer la propriété d'un groupe
+        else if (type == 6) { // transferer la propriété d'un groupe
+            int groupId = buf.getInt();
+            int newOwnerId = buf.getInt();
 
+            GroupMsg g = server.getGroup(groupId);
+            UserMsg newOwner = server.getUser(newOwnerId);
 
+            if (g != null && newOwner != null) {
+
+                // vérifie que l'expéditeur est le propriétaire actuel
+                if (g.getOwner().getId() == p.srcId) {
+
+                    boolean ok = g.changeOwner(newOwner);
+
+                    if (!ok) {
+                        LOG.warning("Transfer failed: new owner not in group");
+                    }
+
+                } else {
+                    LOG.warning("Transfer refused: user is not owner");
+                }
+
+            } else {
+                LOG.warning("Transfer failed: group or user not found");
+            }
         }  
 
 
-        if (type == 7){//supprimer un groupe
-
-
+        else if (type == 7) { // supprimer un groupe
+            int groupId = buf.getInt();
+            server.removeGroup(groupId);
         }
 
 
-        if (type == 8){//modifier son username
+        else if (type == 8) { // modifier son username
+            int length = buf.getInt();
+            byte[] nameBytes = new byte[length];
+            buf.get(nameBytes);
+            String newUsername = new String(nameBytes);
 
+            UserMsg u = server.getUser(p.srcId);
 
+            if (u != null) {
+                u.setUsername(newUsername);
+            } else {
+                LOG.warning("Username change failed: user not found");
+            }
         }
-       
-
-
     }
 	
 	public void createGroup(int ownerId, ByteBuffer data) {

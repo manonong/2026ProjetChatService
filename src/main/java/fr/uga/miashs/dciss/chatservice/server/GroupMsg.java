@@ -19,6 +19,7 @@ import fr.uga.miashs.dciss.chatservice.common.Packet; //données à envoyer
 public class GroupMsg implements PacketProcessor {
 
 	private int groupId; //id du groupe, négatif
+	private String name;
 	private UserMsg owner; //proprietaire du groupe, càd celui qui le crée
 	private Set<UserMsg> members; //ensemble des membres du groupe
 	
@@ -37,6 +38,28 @@ public class GroupMsg implements PacketProcessor {
 	public int getId() { //getter
 		return groupId;
 	}
+
+	public String getName() {
+    return name;
+	}
+
+	
+	public void setName(String name) {
+    this.name = name;
+	}
+
+	public UserMsg getOwner() {
+    return owner;
+	}
+	
+
+	public boolean changeOwner(UserMsg newOwner) {
+    if (newOwner == null) return false;
+    if (!members.contains(newOwner)) return false; // nouveau owner doit être dans la grouppe
+    this.owner = newOwner;
+    return true;
+	}
+
 	
 	/**
 	 * This method has to be used to add a member to the group.
