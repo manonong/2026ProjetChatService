@@ -166,3 +166,5 @@ replay_pid*
 *.db
 target/
 
+.DS_Store
+target/
