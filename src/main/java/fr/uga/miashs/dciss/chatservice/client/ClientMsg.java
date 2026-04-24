@@ -263,27 +263,6 @@ public class ClientMsg {
 
 		// Thread.sleep(5000);
 
-		// l'utilisateur avec id 4 crée un grp avec 1 et 3 dedans (et lui meme)
-		if (c.getIdentifier() == 4) {
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(bos);
-
-			// byte 1 : create group on server
-			dos.writeByte(1);
-
-			// nb members
-			dos.writeInt(2);
-			// list members
-			dos.writeInt(1);
-			dos.writeInt(3);
-			dos.flush();
-
-			c.sendPacket(0, bos.toByteArray());
-
-		}
-		
-		
-
 		Scanner sc = new Scanner(System.in);
 		String lu = null;
 		        while (!"\\quit".equals(lu)) {
@@ -423,6 +402,17 @@ public class ClientMsg {
                                
                                 if (actionGroupeAdmin==2) {//supprimer un utilisateur
                                     try {
+            						    System.out.println("Id de l'user que vous souhaitez supprimer :");
+            						    int deleteUserId = Integer.parseInt(sc.nextLine());
+            		                
+										ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                						DataOutputStream dos = new DataOutputStream(bos);
+										dos.writeByte(4);
+            						    dos.writeInt(idGroup);      
+            						    dos.writeInt(deleteUserId); 	
+										dos.flush();
+
+	        	                        c.sendPacket(0, bos.toByteArray());											
                                        
                                     } catch (Exception e) {
                                         // TODO: handle exception

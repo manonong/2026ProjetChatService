@@ -50,8 +50,7 @@ public class ServerPacketProcessor implements PacketProcessor {
 
 
         if (type == 4){//retirer un user dans un groupe
-
-
+			deleteUserGroup(p.srcId, buf);
         }  
        
         if (type == 5){//changer le nom d'un groupe
@@ -117,6 +116,16 @@ public class ServerPacketProcessor implements PacketProcessor {
 		//////vérifie si qd t'ajoutes un membre il faut que tu sois owner
 		g.addMemberIfOwner(userId, server.getUser(addedUserId));
 	}
+
+	public void deleteUserGroup(int userId, ByteBuffer data){
+		int groupId = data.getInt();// lit positions 1-4, curseur passe à 5
+		int deleteUserId = data.getInt();// lit positions 5-8, curseur passe à 9
+
+		GroupMsg g = server.getGroup(groupId);
+		if (g==null) return; //groupe existe pas
+
+		g.deleteMemberIfOwner(userId, server.getUser(deleteUserId)); //vérifie si admin
+	}	
 }
 
 

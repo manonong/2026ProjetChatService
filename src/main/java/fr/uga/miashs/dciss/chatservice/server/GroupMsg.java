@@ -90,4 +90,8 @@ public class GroupMsg implements PacketProcessor {
     return addMember(newMember);
 }
 
+	public boolean deleteMemberIfOwner(int requesterId, UserMsg removedMember) {
+    if (owner.getId() != requesterId) return false;
+    return removeMember(removedMember);
+}
 }
