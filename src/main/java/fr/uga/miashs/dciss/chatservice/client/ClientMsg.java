@@ -11,18 +11,24 @@
 
 package fr.uga.miashs.dciss.chatservice.client;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.sql.Connection;
+import java.net.UnknownHostException;	//new
+import java.sql.Connection;			//new
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;	//new
-import java.sql.ResultSet;			//new
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Scanner;
 
 import fr.uga.miashs.dciss.chatservice.common.Packet;
+import fr.uga.miashs.dciss.chatservice.db.DatabaseManager;
 
 /**
  * Manages the connection to a ServerMsg. Method startSession() is used to
@@ -137,7 +143,7 @@ public class ClientMsg {
 
 	private void sauvegarderIdLocal(int id){
     	try {
-		Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db")
+		Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db");
         cnx.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS Session (userId INTEGER PRIMARY KEY)");
 
         PreparedStatement ps = cnx.prepareStatement("INSERT OR REPLACE INTO Session VALUES (?)");
@@ -211,7 +217,36 @@ public class ClientMsg {
 		}
 		
 	}
+public void sendFile(int destId, String filePath) {
+    try {
+        java.io.File file = new java.io.File(filePath);
 
+        if (!file.exists()) {
+            System.out.println("Le fichier n'existe pas : " + filePath);
+            return;
+        }
+
+        byte[] fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dosLocal = new DataOutputStream(bos);
+
+        // 1 = text, 2 = file
+        dosLocal.writeInt(2); // type de ficher
+        dosLocal.writeUTF(file.getName());
+        dosLocal.writeInt(fileBytes.length);
+        dosLocal.write(fileBytes);
+
+        dosLocal.flush();
+
+        sendPacket(destId, bos.toByteArray());
+
+        System.out.println("Fichier envoyé : " + file.getName());
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 
 
 	/**
@@ -250,10 +285,48 @@ public class ClientMsg {
 
 //--- LE MAIN POUR LANCER L'ACTION -------------------------------------
 	public static void main(String[] args) throws UnknownHostException, IOException, InterruptedException {
+		DatabaseManager.initDatabase();
 		ClientMsg c = new ClientMsg("localhost", 1666);
 
 		// add a dummy listener that print the content of message as a string
-		c.addMessageListener(p -> System.out.println(p.srcId + " says to " + p.destId + ": " + new String(p.data)));
+		c.addMessageListener(p -> {
+    try {
+        DataInputStream dis = new DataInputStream(
+            new java.io.ByteArrayInputStream(p.data)
+        );
+
+        int type = dis.readInt();
+
+        if (type == 1) {
+            String msg = dis.readUTF();
+            System.out.println(p.srcId + " says: " + msg);
+
+            DatabaseManager.saveMessage(p.srcId, p.destId, msg, "TEXT");
+
+
+        } else if (type == 2) {
+            String filename = dis.readUTF();
+            int size = dis.readInt();
+
+            byte[] fileBytes = new byte[size];
+            dis.readFully(fileBytes);
+
+            java.io.File dir = new java.io.File("downloads");
+            dir.mkdirs();
+
+            String path = "downloads/" + System.currentTimeMillis() + "_" + filename;
+
+            java.nio.file.Files.write(java.nio.file.Paths.get(path), fileBytes);
+
+            System.out.println("Fichier reçu : " + path);
+            DatabaseManager.saveMessage(p.srcId, p.destId, filename, "FILE");
+
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+});
 		
 		// add a connection listener that exit application when connection closed
 		c.addConnectionListener(active ->  {if (!active) System.exit(0);});
@@ -293,24 +366,44 @@ public class ClientMsg {
                 System.out.println("Tapez 2 pour gérer un groupe");
                 System.out.println("Tapez 3 pour gérer les contacts");
                 System.out.println("Tapez 4 pour gérer votre compte");
+				System.out.println("Tapez 5 pour voir l'historique de vos messages");
+                System.out.println("Tapez 6 pour envoyer un fichier");
                 int action = Integer.parseInt(sc.nextLine()); //récupere la valeur
 
 
                 if(action==1){ //écrire un message
                     try {
                         System.out.println("A qui voulez vous écrire ? ");
-                        int dest = Integer.parseInt(sc.nextLine());
+        int dest = Integer.parseInt(sc.nextLine());
                         //TODO, faire choisir parmi les contacts ou mettre l'id
 
 
-                        System.out.println("Votre message ? ");
-                        lu = sc.nextLine();
-                        c.sendPacket(dest, lu.getBytes());
-                       
-                    } catch (InputMismatchException | NumberFormatException e) {
-                        System.out.println("Mauvais format");
+        System.out.println("Votre message ? ");
+        lu = sc.nextLine();
+
+        c.sendPacket(dest, lu.getBytes());
+
+        //
+        DatabaseManager.saveMessage(c.getIdentifier(), dest, lu, "TEXT");
+       
+    } catch (InputMismatchException | NumberFormatException e) {
+        System.out.println("Mauvais format");
                     }
                 }
+				if (action == 6) { // envoyer un fichier
+    try {
+        System.out.println("A qui envoyer ?");
+        int dest = Integer.parseInt(sc.nextLine());
+
+        System.out.println("Chemin du fichier ?");
+        String path = sc.nextLine();
+
+        c.sendFile(dest, path);
+
+    } catch (Exception e) {
+        System.out.println("Erreur fichier");
+    }
+}
 
 
                 if (action==2) { //gérer un groupe
@@ -398,6 +491,7 @@ public class ClientMsg {
                                 System.out.println("Tapez 3 pour modifier le nom du groupe");
                                 System.out.println("Tapez 4 pour transferer le droit de propriété du groupe");
                                 System.out.println("Tapez 5 pour supprimer le groupe");
+								System.out.println("Tapez 6 pour voir l'historique du groupe");
                                 int actionGroupeAdmin = Integer.parseInt(sc.nextLine()); //récupere la valeur
 
 
@@ -453,6 +547,9 @@ public class ClientMsg {
                         // TODO: handle exception
                     }
                 }
+				if(action==5){
+    				DatabaseManager.showAllMessages();
+				}
        
                 if (action==3) {//gestion des contacts
                     try{
@@ -508,7 +605,7 @@ public class ClientMsg {
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Mauvais format");
             }
-
+			
 
         }
 	}
