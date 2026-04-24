@@ -137,7 +137,7 @@ public class ClientMsg {
 
 	private void sauvegarderIdLocal(int id){
     	try {
-		Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db")
+		Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db");
         cnx.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS Session (userId INTEGER PRIMARY KEY)");
 
         PreparedStatement ps = cnx.prepareStatement("INSERT OR REPLACE INTO Session VALUES (?)");
@@ -390,8 +390,9 @@ public class ClientMsg {
                        
                         if (actionGroupe==3) {//gérer un groupe existant avec les droits owner
                             try {
-                                //1ere étape choisir le groupe, TODO puis :
-
+                                //1ere étape choisir le groupe, TODO puis 
+			                    System.out.println("Quel groupe voulez-vous éditer ?");								
+                            	int idGroup = Integer.parseInt(sc.nextLine());			
 
                                 System.out.println("Tapez 1 pour ajouter un utilisateur");
                                 System.out.println("Tapez 2 pour supprimer un utilisateur");                
@@ -401,9 +402,20 @@ public class ClientMsg {
                                 int actionGroupeAdmin = Integer.parseInt(sc.nextLine()); //récupere la valeur
 
 
-                                if (actionGroupeAdmin==1) {//ajouter un utilisateur
-                                    try {
-                                       
+                                if (actionGroupeAdmin==1) {//ajouter un utilisateur dans un groupe
+                                    try {                           
+            						    System.out.println("Id de l'user que vous souhaitez ajouter :");
+            						    int addedUserId = Integer.parseInt(sc.nextLine());
+            		                
+										ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                						DataOutputStream dos = new DataOutputStream(bos);
+										dos.writeByte(3);
+            						    dos.writeInt(idGroup);      
+            						    dos.writeInt(addedUserId); 	
+										dos.flush();
+
+	        	                        c.sendPacket(0, bos.toByteArray());								
+                                     
                                     } catch (Exception e) {
                                         // TODO: handle exception
                                     }
