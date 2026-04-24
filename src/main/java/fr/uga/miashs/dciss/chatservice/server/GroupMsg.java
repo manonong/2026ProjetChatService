@@ -19,6 +19,7 @@ import fr.uga.miashs.dciss.chatservice.common.Packet; //données à envoyer
 public class GroupMsg implements PacketProcessor {
 
 	private int groupId; //id du groupe, négatif
+	private String nomGroupe;
 	private UserMsg owner; //proprietaire du groupe, càd celui qui le crée
 	private Set<UserMsg> members; //ensemble des membres du groupe
 	
@@ -28,6 +29,7 @@ public class GroupMsg implements PacketProcessor {
 		//si l'id est négatif ou si le proprietaire n'existe pas, lance une exception
 		this.groupId=groupId;
 		this.owner=owner;
+		this.nomGroupe = String.valueOf(groupId); //par défaut, le nom du groupe est le numéro de l'id
 		members=Collections.synchronizedSet(new HashSet<>());
 		//permet d'utiliser un thread plusieurs fois en même temps
 		//thread : une séquence d'instructions pouvant être exécutées indépendamment au sein d'un programme
@@ -88,12 +90,12 @@ public class GroupMsg implements PacketProcessor {
 	public boolean addMemberIfOwner(int requesterId, UserMsg newMember) {
     if (owner.getId() != requesterId) return false;
     return addMember(newMember);
-}
+	}
 
 	public boolean deleteMemberIfOwner(int requesterId, UserMsg removedMember) {
     if (owner.getId() != requesterId) return false;
     return removeMember(removedMember);
-}
+	}
 
 	public boolean transferOwnerIfOwner(int requesterId, UserMsg newOwner) {
 	    if (owner.getId() != requesterId) return false;  // pas le owner
@@ -101,5 +103,11 @@ public class GroupMsg implements PacketProcessor {
 	    if (!members.contains(newOwner)) return false;   // doit déjà être membre
     	owner = newOwner;
     	return true;
-}
+	}
+
+	public boolean deleteIfOwner(int requesterId){
+	    if (owner.getId() != requesterId) return false;  // pas le owner
+		beforeDelete();
+		return true;
+	}
 }

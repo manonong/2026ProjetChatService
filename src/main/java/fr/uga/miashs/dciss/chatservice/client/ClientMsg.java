@@ -452,6 +452,18 @@ public class ClientMsg {
 
                                 if (actionGroupeAdmin==5) {//supprimer le groupe
                                     try {
+										System.out.println("Confirmez la suppression du groupe :");
+		                                System.out.println("1 : oui             0 : non");
+										if(Integer.parseInt(sc.nextLine())==1){
+											ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                							DataOutputStream dos = new DataOutputStream(bos);
+											dos.writeByte(7);
+											dos.writeInt(idGroup);      
+											dos.flush();
+
+		        	                        c.sendPacket(0, bos.toByteArray());											
+
+										}
                                        
                                     } catch (Exception e) {
                                         // TODO: handle exception

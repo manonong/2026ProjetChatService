@@ -65,7 +65,7 @@ public class ServerPacketProcessor implements PacketProcessor {
 
 
         if (type == 7){//supprimer un groupe
-
+			deleteGroup(p.srcId, buf);
 
         }
 
@@ -135,6 +135,18 @@ public class ServerPacketProcessor implements PacketProcessor {
 		if (g==null) return; //groupe existe pas
 
     	g.transferOwnerIfOwner(userId, server.getUser(newOwnerId));
+	}
+
+	public void deleteGroup(int userId, ByteBuffer data){
+		int groupId = data.getInt(); //groupe a supprimer
+
+		GroupMsg g = server.getGroup(groupId);
+		if (g==null) return; //groupe existe pas
+
+	    if (g.deleteIfOwner(userId)) {
+        server.removeGroup(groupId); // retire le groupe de la map du serveur
+    }	
+
 	}
 
 
