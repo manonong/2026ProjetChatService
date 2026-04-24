@@ -502,7 +502,7 @@ public void sendFile(int destId, String filePath) {
 
 
                                 if (actionGroupeAdmin==3) {//modifier nom du groupe
-                                    try {
+                                    try { //faut avoir accès à la BDD
                                        
                                     } catch (Exception e) {
                                         // TODO: handle exception
@@ -512,6 +512,18 @@ public void sendFile(int destId, String filePath) {
 
                                 if (actionGroupeAdmin==4) {//transferer le droit de propriété du groupe
                                     try {
+										System.out.println("A qui souhaitez-vous céder la propriété du groupe ?");
+										int newOwnerId =Integer.parseInt(sc.nextLine());
+
+										ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                						DataOutputStream dos = new DataOutputStream(bos);
+										dos.writeByte(6);
+            						    dos.writeInt(idGroup);      
+            						    dos.writeInt(newOwnerId); 	
+										dos.flush();
+
+	        	                        c.sendPacket(0, bos.toByteArray());											
+                                       									
                                        
                                     } catch (Exception e) {
                                         // TODO: handle exception
