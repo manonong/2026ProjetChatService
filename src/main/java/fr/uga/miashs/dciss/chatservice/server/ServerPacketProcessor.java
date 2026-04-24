@@ -155,11 +155,11 @@ public class ServerPacketProcessor implements PacketProcessor {
 					server.getDb().insertMember(g.getId(), u.getId());
 				}
 			} else {
+                
 				System.out.println("USER " + userId + " NOT FOUND");
 			}
 		}
 	}
-
 
     public void leaveGroup(int userId, ByteBuffer data) { //data est l'id du groupe à quitter
         int groupId = data.getInt();

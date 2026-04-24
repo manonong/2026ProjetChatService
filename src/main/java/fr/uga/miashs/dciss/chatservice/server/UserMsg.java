@@ -13,7 +13,6 @@ package fr.uga.miashs.dciss.chatservice.server;
 import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.*;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import fr.uga.miashs.dciss.chatservice.common.Packet;
@@ -24,6 +23,7 @@ public class UserMsg implements PacketProcessor{
 	private final static Logger LOG = Logger.getLogger(UserMsg.class.getName());
 	
 	private int userId;
+	private String username;
 	private Set<GroupMsg> groups;
 	
 	private ServerMsg server;
@@ -36,6 +36,7 @@ public class UserMsg implements PacketProcessor{
 		if (clientId<1) throw new IllegalArgumentException("id must not be less than 0");
 		this.server=server;
 		this.userId=clientId;
+		this.username = "user" + clientId;
 		active=false;
 		sendQueue = new LinkedBlockingQueue<>();
 		groups = Collections.synchronizedSet(new HashSet<>());
@@ -43,6 +44,14 @@ public class UserMsg implements PacketProcessor{
 	
 	public int getId() {
 		return userId;
+	}
+
+	public String getUsername() {
+    	return username;
+	}
+
+	public void setUsername(String username) {
+    	this.username = username;
 	}
 	
 	public boolean removeGroup(GroupMsg g) {
