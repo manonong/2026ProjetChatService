@@ -59,7 +59,7 @@ public class ServerPacketProcessor implements PacketProcessor {
         }  
        
         if (type == 6){//transferer la propriété d'un groupe
-
+			transferOwnership(p.srcId, buf);
 
         }  
 
@@ -126,6 +126,18 @@ public class ServerPacketProcessor implements PacketProcessor {
 
 		g.deleteMemberIfOwner(userId, server.getUser(deleteUserId)); //vérifie si admin
 	}	
+
+	public void transferOwnership(int userId, ByteBuffer data){
+		int groupId = data.getInt();// lit positions 1-4, curseur passe à 5
+		int newOwnerId = data.getInt();// lit positions 5-8, curseur passe à 9	
+		
+		GroupMsg g = server.getGroup(groupId);
+		if (g==null) return; //groupe existe pas
+
+    	g.transferOwnerIfOwner(userId, server.getUser(newOwnerId));
+	}
+
+
 }
 
 
