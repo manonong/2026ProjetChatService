@@ -16,8 +16,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;	//new
-import java.sql.ResultSet;			//new
+import java.sql.PreparedStatement; //new
+import java.sql.ResultSet; //new
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,16 +37,14 @@ public class ClientMsg {
 	private String serverAddress;
 	private int serverPort;
 
-	private Socket s;					// Socket de l'utlisateur (est null == jamais connecté OU session fermée)
-	private DataOutputStream dos;		//DOS est pour les flux SORTANT
-	private DataInputStream dis;		// DIS est pour les flux ENTRANT
+	private Socket s; // Socket de l'utlisateur (est null == jamais connecté OU session fermée)
+	private DataOutputStream dos; // DOS est pour les flux SORTANT
+	private DataInputStream dis; // DIS est pour les flux ENTRANT
 
 	private int identifier;
 
 	private List<MessageListener> mListeners;
 	private List<ConnectionListener> cListeners;
-
-
 
 	/**
 	 * Create a client with an existing id, that will connect to the server at the
@@ -68,8 +66,6 @@ public class ClientMsg {
 		cListeners = new ArrayList<>();
 	}
 
-
-
 	/**
 	 * Create a client without id, the server will provide an id during the the
 	 * session start
@@ -81,8 +77,6 @@ public class ClientMsg {
 		this(0, address, port);
 	}
 
-
-
 	/**
 	 * Register a MessageListener to the client. It will be notified each time a
 	 * message is received.
@@ -93,14 +87,14 @@ public class ClientMsg {
 		if (l != null)
 			mListeners.add(l);
 	}
+
 	protected void notifyMessageListeners(Packet p) {
 		mListeners.forEach(x -> x.messageReceived(p));
 	}
-	
-
 
 	/**
-	 * Register a ConnectionListener to the client. It will be notified if the connection  start or ends.
+	 * Register a ConnectionListener to the client. It will be notified if the
+	 * connection start or ends.
 	 * 
 	 * @param l
 	 */
@@ -108,49 +102,48 @@ public class ClientMsg {
 		if (l != null)
 			cListeners.add(l);
 	}
+
 	protected void notifyConnectionListeners(boolean active) {
 		cListeners.forEach(x -> x.connectionEvent(active));
 	}
 
-
-	public int getIdentifier() {		// Récupère l'id en mémoire de l'objet d'instance
+	public int getIdentifier() { // Récupère l'id en mémoire de l'objet d'instance
 		return identifier;
 	}
 
-
-
-
-	private int chargerIdLocal(){		// Récupère l'id de l'utilisateur dans la base de données (codé pour SQL)
-    	try {
-			Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db");		//*******POTENTIELLEMENT À CHANGER LE CHEMIN --VOIR SELON LA BDD***********//
+	private int chargerIdLocal() { // Récupère l'id de l'utilisateur dans la base de données (codé pour SQL)
+		try {
+			Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db"); // *******POTENTIELLEMENT À CHANGER
+																					// LE CHEMIN --VOIR SELON LA
+																					// BDD***********//
 			cnx.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS Session (userId INTEGER PRIMARY KEY)");
-        
+
 			ResultSet res = cnx.createStatement().executeQuery("SELECT userId FROM Session");
-			if (res.next()) return res.getInt(1);
+			if (res.next())
+				return res.getInt(1);
 
-    	} catch (SQLException e) {
+		} catch (SQLException e) {
 			// TODO Exception chargerLocal
-        	e.printStackTrace();
-    	}
-			return 0;
+			e.printStackTrace();
+		}
+		return 0;
 	}
 
-	private void sauvegarderIdLocal(int id){
-    	try {
-		Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db");
-        cnx.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS Session (userId INTEGER PRIMARY KEY)");
+	private void sauvegarderIdLocal(int id) {
+		try {
+			Connection cnx = DriverManager.getConnection("jdbc:sqlite:client.db");
+			cnx.createStatement().executeUpdate("CREATE TABLE IF NOT EXISTS Session (userId INTEGER PRIMARY KEY)");
 
-        PreparedStatement ps = cnx.prepareStatement("INSERT OR REPLACE INTO Session VALUES (?)");
-        ps.setInt(1, id);	// -- Paramètre la requête SQL 		// paramètre 1 : indique quel ? il faut remplacer dans la requête SQL / paramètre 2 : par quoi il faut le remplacer
-        ps.executeUpdate();	// -- Mise en jour de la requête
+			PreparedStatement ps = cnx.prepareStatement("INSERT OR REPLACE INTO Session VALUES (?)");
+			ps.setInt(1, id); // -- Paramètre la requête SQL // paramètre 1 : indique quel ? il faut remplacer
+								// dans la requête SQL / paramètre 2 : par quoi il faut le remplacer
+			ps.executeUpdate(); // -- Mise en jour de la requête
 
-    	} catch (SQLException e) {
+		} catch (SQLException e) {
 			// TODO Exception sauvergarderIdLocal
-        	e.printStackTrace();
-    	}
+			e.printStackTrace();
+		}
 	}
-
-	
 
 	/**
 	 * Method to be called to establish the connection.
@@ -159,37 +152,41 @@ public class ClientMsg {
 	 * @throws IOException
 	 */
 	public void startSession() throws UnknownHostException {
-		if (s == null || s.isClosed()) {	
-		//Sécurité pour ne pas ouvrir plusieurs sockets vers le serveur pour un même utilisateur
+		if (s == null || s.isClosed()) {
+			// Sécurité pour ne pas ouvrir plusieurs sockets vers le serveur pour un même
+			// utilisateur
 
 			try {
-				s = new Socket(serverAddress, serverPort); 			// Créer la connection réseau (TCP) entre deux machines -- Classe Java "Socket" --
-				dos = new DataOutputStream(s.getOutputStream());	// Prépare l'envoi -- DataOutputStream est un wrapper (permet utiliser dos.writeInt(), write(bytes), writeUTF("string") ) --
-				dis = new DataInputStream(s.getInputStream());		// Prépare la réception -- DataInputStream est un wrapper (permet utliser dis.readInt(), readFully(bytes), readUTF("string") )
-			//DOS est pour les flux SORTANT // DIS est pour les flux ENTRANT
+				s = new Socket(serverAddress, serverPort); // Créer la connection réseau (TCP) entre deux machines --
+															// Classe Java "Socket" --
+				dos = new DataOutputStream(s.getOutputStream()); // Prépare l'envoi -- DataOutputStream est un wrapper
+																	// (permet utiliser dos.writeInt(), write(bytes),
+																	// writeUTF("string") ) --
+				dis = new DataInputStream(s.getInputStream()); // Prépare la réception -- DataInputStream est un wrapper
+																// (permet utliser dis.readInt(), readFully(bytes),
+																// readUTF("string") )
+				// DOS est pour les flux SORTANT // DIS est pour les flux ENTRANT
 
-				identifier = chargerIdLocal(); 		// Récupère l'id si il existe déjà
+				identifier = chargerIdLocal(); // Récupère l'id si il existe déjà
 
-				dos.writeInt(identifier);	// 
+				dos.writeInt(identifier); //
 				dos.flush();
 
-				if (identifier == 0 ) { 		// -- 0 car un int Nao//
+				if (identifier == 0) { // -- 0 car un int Nao//
 					identifier = dis.readInt();
-					sauvegarderIdLocal(identifier);		// Sauvegarde l'id si nouveau
+					sauvegarderIdLocal(identifier); // Sauvegarde l'id si nouveau
 				}
 
 				// start the receive loop
 				new Thread(() -> receiveLoop()).start();
 				notifyConnectionListeners(true);
 			} catch (IOException e) {
-				//e.printStackTrace();
+				// e.printStackTrace();
 				// error, close session
 				closeSession();
 			}
 		}
 	}
-
-
 
 	/**
 	 * Send a packet to the specified destination (etiher a userId or groupId)
@@ -209,10 +206,8 @@ public class ClientMsg {
 			// error, connection closed
 			closeSession();
 		}
-		
+
 	}
-
-
 
 	/**
 	 * Start the receive loop. Has to be called only once.
@@ -235,8 +230,6 @@ public class ClientMsg {
 		closeSession();
 	}
 
-
-
 	public void closeSession() {
 		try {
 			if (s != null)
@@ -247,16 +240,18 @@ public class ClientMsg {
 		notifyConnectionListeners(false);
 	}
 
-
-//--- LE MAIN POUR LANCER L'ACTION -------------------------------------
+	// --- LE MAIN POUR LANCER L'ACTION -------------------------------------
 	public static void main(String[] args) throws UnknownHostException, IOException, InterruptedException {
 		ClientMsg c = new ClientMsg("localhost", 1666);
 
 		// add a dummy listener that print the content of message as a string
 		c.addMessageListener(p -> System.out.println(p.srcId + " says to " + p.destId + ": " + new String(p.data)));
-		
+
 		// add a connection listener that exit application when connection closed
-		c.addConnectionListener(active ->  {if (!active) System.exit(0);});
+		c.addConnectionListener(active -> {
+			if (!active)
+				System.exit(0);
+		});
 
 		c.startSession();
 		System.out.println("Vous êtes : " + c.getIdentifier());
@@ -281,261 +276,241 @@ public class ClientMsg {
 			c.sendPacket(0, bos.toByteArray());
 
 		}
-		
-		
 
 		Scanner sc = new Scanner(System.in);
 		String lu = null;
-		        while (!"\\quit".equals(lu)) {
-            try {
-                System.out.println("Que souhaitez vous faire ?");
-                System.out.println("Tapez 1 pour écrire un message");
-                System.out.println("Tapez 2 pour gérer un groupe");
-                System.out.println("Tapez 3 pour gérer les contacts");
-                System.out.println("Tapez 4 pour gérer votre compte");
-                int action = Integer.parseInt(sc.nextLine()); //récupere la valeur
+		while (!"\\quit".equals(lu)) {
+			try {
+				System.out.println("Que souhaitez vous faire ?");
+				System.out.println("Tapez 1 pour écrire un message");
+				System.out.println("Tapez 2 pour gérer un groupe");
+				System.out.println("Tapez 3 pour gérer les contacts");
+				System.out.println("Tapez 4 pour gérer votre compte");
+				int action = Integer.parseInt(sc.nextLine()); // récupere la valeur
 
+				if (action == 1) { // écrire un message
+					try {
+						System.out.println("A qui voulez vous écrire ? ");
+						int dest = Integer.parseInt(sc.nextLine());
+						// TODO, faire choisir parmi les contacts ou mettre l'id
 
-                if(action==1){ //écrire un message
-                    try {
-                        System.out.println("A qui voulez vous écrire ? ");
-                        int dest = Integer.parseInt(sc.nextLine());
-                        //TODO, faire choisir parmi les contacts ou mettre l'id
+						System.out.println("Votre message ? ");
+						lu = sc.nextLine();
+						c.sendPacket(dest, lu.getBytes());
 
+					} catch (InputMismatchException | NumberFormatException e) {
+						System.out.println("Mauvais format");
+					}
+				}
 
-                        System.out.println("Votre message ? ");
-                        lu = sc.nextLine();
-                        c.sendPacket(dest, lu.getBytes());
-                       
-                    } catch (InputMismatchException | NumberFormatException e) {
-                        System.out.println("Mauvais format");
-                    }
-                }
+				if (action == 2) { // gérer un groupe
+					try {
+						System.out.println("Tapez 1 pour créer un groupe");
+						System.out.println("Tapez 2 pour quitter un groupe");
+						System.out.println("Tapez 3 pour gérer un groupe existant dont vous être propriétaire");
+						int actionGroupe = Integer.parseInt(sc.nextLine()); // récupere la valeur
 
+						if (actionGroupe == 1) { // créer un groupe
+							try {
+								ByteArrayOutputStream bos = new ByteArrayOutputStream(); // on rajoute une place dans le
+																							// buffer pour le groupe
+								DataOutputStream dos = new DataOutputStream(bos);
+								// byte 1 : create group on server
+								dos.writeByte(1);
 
-                if (action==2) { //gérer un groupe
-                    try {
-                        System.out.println("Tapez 1 pour créer un groupe");
-                        System.out.println("Tapez 2 pour quitter un groupe");              
-                        System.out.println("Tapez 3 pour gérer un groupe existant dont vous être propriétaire");
-                        int actionGroupe = Integer.parseInt(sc.nextLine()); //récupere la valeur
+								System.out.println("Nom du groupe ?");
+								String nomGroupe = sc.nextLine();
+								/////////// TODO voir lien BDD
+								byte[] nameBytes = nomGroupe.getBytes();
+								dos.writeInt(nameBytes.length);
+								dos.write(nameBytes);
 
+								System.out.println("Combien de personnes voulez-vous ajouter ?");
+								int nbrMembre = Integer.parseInt(sc.nextLine());
+								if (nbrMembre <= 0) {
+									throw new IllegalArgumentException("Doit être positif");
+								}
+								dos.writeInt(nbrMembre); // reserve les bits avec le nbr de places
 
-                        if (actionGroupe==1) { //créer un groupe
-                            try {
-                                ByteArrayOutputStream bos = new ByteArrayOutputStream(); //on rajoute une place dans le buffer pour le groupe
-                                DataOutputStream dos = new DataOutputStream(bos);
-                                // byte 1 : create group on server
-                                dos.writeByte(1);
+								System.out.println("Qui voulez-vous ajouter :");
+								// avec les id
+								for (int i = 1; i <= nbrMembre; i++) {// demande le meme nombre d'id qu'annoncé avant
+									int idMembre = Integer.parseInt(sc.next());
+									if (idMembre == c.getIdentifier()) {
+										throw new IllegalArgumentException("ne peut pas s'ajouter soi-même");
+									}
+									dos.writeInt(idMembre);
+									System.out.println(idMembre + " a été ajouté");
+								}
+								System.out.println(nomGroupe + " a été crée");
 
+								c.sendPacket(0, bos.toByteArray());
 
-                                System.out.println("Nom du groupe ?");
-                                String nomGroupe = sc.nextLine();
-                                ///////////TODO voir lien BDD
+							} catch (InputMismatchException | NumberFormatException e) {
+								System.out.println("Mauvais format");
+							}
 
+						}
 
-                                System.out.println("Combien de personnes voulez-vous ajouter ?");
-                                int nbrMembre = Integer.parseInt(sc.nextLine());                                
-                                if(nbrMembre<=0){throw new IllegalArgumentException("Doit être positif");}
-                                dos.writeInt(nbrMembre); //reserve les bits avec le nbr de places
+						if (actionGroupe == 2) {// quitter un groupe
+							try {
+								ByteArrayOutputStream bos = new ByteArrayOutputStream(); // on rajoute une place dans le
+																							// buffer pour le groupe
+								DataOutputStream dos = new DataOutputStream(bos);
+								// voir les groupes dont l'user est membre, en selectionner un
 
+								dos.writeByte(2);
 
-                                System.out.println("Qui voulez-vous ajouter :");
-                                //avec les id
-                                for(int i=1; i<=nbrMembre; i++){//demande le meme nombre d'id qu'annoncé avant
-                                    int idMembre = Integer.parseInt(sc.next());
-                                    if (idMembre==c.getIdentifier()) { throw new IllegalArgumentException("ne peut pas s'ajouter soi-même");}
-                                    dos.writeInt(idMembre);
-                                    System.out.println(idMembre+" a été ajouté");
-                                }
-                                System.out.println(nomGroupe +" a été crée");
+								System.out.println("id du groupe que vous souhaitez quitter");
+								int idGroup = Integer.parseInt(sc.nextLine());
+								dos.writeInt(idGroup);
+								dos.flush();
 
+								// demande confirmation
+								System.out.println("Souhaitez-vous quitter ce groupe ?"); // rajouter nom groupe TODO
+								System.out.println("1 : oui             0 : non");
+								if (Integer.parseInt(sc.nextLine()) == 1) {
+									c.sendPacket(0, bos.toByteArray());
+								}
+							} catch (Exception e) {
+								System.out.println("Mauvais format");
+							}
 
-                                c.sendPacket(0, bos.toByteArray());
-                               
-                            } catch (InputMismatchException | NumberFormatException e) {
-                                System.out.println("Mauvais format");
-                            }
-                           
-                        }
+						}
 
+						if (actionGroupe == 3) {// gérer un groupe existant avec les droits owner
+							try {
+								// 1ere étape choisir le groupe, TODO puis
+								System.out.println("Quel groupe voulez-vous éditer ?");
+								int idGroup = Integer.parseInt(sc.nextLine());
 
-                        if (actionGroupe==2) {//quitter un groupe
-                            try {
-                                ByteArrayOutputStream bos = new ByteArrayOutputStream(); //on rajoute une place dans le buffer pour le groupe
-                                DataOutputStream dos = new DataOutputStream(bos);                              
-                                //voir les groupes dont l'user est membre, en selectionner un
+								System.out.println("Tapez 1 pour ajouter un utilisateur");
+								System.out.println("Tapez 2 pour supprimer un utilisateur");
+								System.out.println("Tapez 3 pour modifier le nom du groupe");
+								System.out.println("Tapez 4 pour transferer le droit de propriété du groupe");
+								System.out.println("Tapez 5 pour supprimer le groupe");
+								int actionGroupeAdmin = Integer.parseInt(sc.nextLine()); // récupere la valeur
 
+								if (actionGroupeAdmin == 1) {// ajouter un utilisateur dans un groupe
+									try {
+										System.out.println("Id de l'user que vous souhaitez ajouter :");
+										int addedUserId = Integer.parseInt(sc.nextLine());
 
-                                dos.writeByte(2);
-
-
-                                System.out.println("id du groupe que vous souhaitez quitter");
-                                int idGroup = Integer.parseInt(sc.nextLine());
-                                dos.writeInt(idGroup);
-                                dos.flush();
-
-
-                                //demande confirmation
-                                System.out.println("Souhaitez-vous quitter ce groupe ?"); //rajouter nom groupe TODO
-                                System.out.println("1 : oui             0 : non");
-                                if(Integer.parseInt(sc.nextLine())==1){
-                                    c.sendPacket(0, bos.toByteArray());
-                                }                          
-                            } catch (Exception e) {
-                                System.out.println("Mauvais format");
-                            }
-                           
-                        }              
-                       
-                        if (actionGroupe==3) {//gérer un groupe existant avec les droits owner
-                            try {
-                                //1ere étape choisir le groupe, TODO puis 
-			                    System.out.println("Quel groupe voulez-vous éditer ?");								
-                            	int idGroup = Integer.parseInt(sc.nextLine());			
-
-                                System.out.println("Tapez 1 pour ajouter un utilisateur");
-                                System.out.println("Tapez 2 pour supprimer un utilisateur");                
-                                System.out.println("Tapez 3 pour modifier le nom du groupe");
-                                System.out.println("Tapez 4 pour transferer le droit de propriété du groupe");
-                                System.out.println("Tapez 5 pour supprimer le groupe");
-                                int actionGroupeAdmin = Integer.parseInt(sc.nextLine()); //récupere la valeur
-
-
-                                if (actionGroupeAdmin==1) {//ajouter un utilisateur dans un groupe
-                                    try {                           
-            						    System.out.println("Id de l'user que vous souhaitez ajouter :");
-            						    int addedUserId = Integer.parseInt(sc.nextLine());
-            		                
 										ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                						DataOutputStream dos = new DataOutputStream(bos);
+										DataOutputStream dos = new DataOutputStream(bos);
 										dos.writeByte(3);
-            						    dos.writeInt(idGroup);      
-            						    dos.writeInt(addedUserId); 	
+										dos.writeInt(idGroup);
+										dos.writeInt(addedUserId);
 										dos.flush();
 
-	        	                        c.sendPacket(0, bos.toByteArray());								
-                                     
-                                    } catch (Exception e) {
-                                        // TODO: handle exception
-                                    }
-                                }
-                               
-                                if (actionGroupeAdmin==2) {//supprimer un utilisateur
-                                    try {
-                                       
-                                    } catch (Exception e) {
-                                        // TODO: handle exception
-                                    }
-                                }
+										c.sendPacket(0, bos.toByteArray());
 
+									} catch (Exception e) {
+										// TODO: handle exception
+									}
+								}
 
-                                if (actionGroupeAdmin==3) {//modifier nom du groupe
-                                    try {
-                                       
-                                    } catch (Exception e) {
-                                        // TODO: handle exception
-                                    }
-                                }
+								if (actionGroupeAdmin == 2) {// supprimer un utilisateur
+									try {
 
+									} catch (Exception e) {
+										// TODO: handle exception
+									}
+								}
 
-                                if (actionGroupeAdmin==4) {//transferer le droit de propriété du groupe
-                                    try {
-                                       
-                                    } catch (Exception e) {
-                                        // TODO: handle exception
-                                    }
-                                }
+								if (actionGroupeAdmin == 3) {// modifier nom du groupe
+									try {
 
+									} catch (Exception e) {
+										// TODO: handle exception
+									}
+								}
 
-                                if (actionGroupeAdmin==5) {//supprimer le groupe
-                                    try {
-                                       
-                                    } catch (Exception e) {
-                                        // TODO: handle exception
-                                    }
-                                }
+								if (actionGroupeAdmin == 4) {// transferer le droit de propriété du groupe
+									try {
 
+									} catch (Exception e) {
+										// TODO: handle exception
+									}
+								}
 
-                            } catch (Exception e) {
-                                // TODO: handle exception
-                            }
-                        }
-                    }catch (Exception e) {
-                        // TODO: handle exception
-                    }
-                }
-       
-                if (action==3) {//gestion des contacts
-                    try{
-                        System.out.println("Tapez 1 pour ajouter un contact");
-                        System.out.println("Tapez 2 pour supprimer un contact");                
-                        System.out.println("Tapez 3 pour modifier le nom d'un contact");    
-                        int actionContact = Integer.parseInt(sc.nextLine()); //récupere la valeur
+								if (actionGroupeAdmin == 5) {// supprimer le groupe
+									try {
 
+									} catch (Exception e) {
+										// TODO: handle exception
+									}
+								}
 
-                        if(actionContact==1){ //ajouter un contact
-                            try {
-                               
-                            } catch (Exception e) {
-                                // TODO: handle exception
-                            }
-                        }
+							} catch (Exception e) {
+								// TODO: handle exception
+							}
+						}
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				}
 
+				if (action == 3) {// gestion des contacts
+					try {
+						System.out.println("Tapez 1 pour ajouter un contact");
+						System.out.println("Tapez 2 pour supprimer un contact");
+						System.out.println("Tapez 3 pour modifier le nom d'un contact");
+						int actionContact = Integer.parseInt(sc.nextLine()); // récupere la valeur
 
-                        if(actionContact==2){ //supprimer un contact
-                            try {
-                               
-                            } catch (Exception e) {
-                                // TODO: handle exception
-                            }
-                        }  
-                           
-                        if(actionContact==3){ //modifier un contact
-                            try {
-                               
-                            } catch (Exception e) {
-                                // TODO: handle exception
-                            }
-                        }
+						if (actionContact == 1) { // ajouter un contact
+							try {
 
+							} catch (Exception e) {
+								// TODO: handle exception
+							}
+						}
 
-                       
-                    } catch (Exception e) {
-                        // TODO: handle exception
-                    }
-                }
+						if (actionContact == 2) { // supprimer un contact
+							try {
 
+							} catch (Exception e) {
+								// TODO: handle exception
+							}
+						}
 
-                if(action==4){//gestion utilisateur, pour le moment que modifier son nom
-                    try {
-                       
-                    } catch (Exception e) {
-                        // TODO: handle exception                       }
-                    }
-                   
-                }
+						if (actionContact == 3) { // modifier un contact
+							try {
 
+							} catch (Exception e) {
+								// TODO: handle exception
+							}
+						}
 
-            } catch (InputMismatchException | NumberFormatException e) {
-                System.out.println("Mauvais format");
-            }
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				}
 
+				if (action == 4) {// gestion utilisateur, pour le moment que modifier son nom
+					try {
 
-        }
+					} catch (Exception e) {
+						// TODO: handle exception }
+					}
+
+				}
+
+			} catch (InputMismatchException | NumberFormatException e) {
+				System.out.println("Mauvais format");
+			}
+
+		}
 	}
 }
 
-        //permet à un user de créer un groupe
-        //TODO
+// permet à un user de créer un groupe
+// TODO
 
-
-
-
-        /*
-         * int id =1+(c.getIdentifier()-1) % 2; System.out.println("send to "+id);
-         * c.sendPacket(id, "bonjour".getBytes());
-         *
-         *
-         * Thread.sleep(10000);
-         */
+/*
+ * int id =1+(c.getIdentifier()-1) % 2; System.out.println("send to "+id);
+ * c.sendPacket(id, "bonjour".getBytes());
+ *
+ *
+ * Thread.sleep(10000);
+ */
