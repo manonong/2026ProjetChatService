@@ -46,7 +46,7 @@ public class ServerPacketProcessor implements PacketProcessor {
 
 
         if (type == 3){//ajouter un user dans un groupe
-
+			addUserGroup(p.srcId, buf);
 
         }
 
@@ -100,6 +100,17 @@ public class ServerPacketProcessor implements PacketProcessor {
             g.removeMember(server.getUser(userId));
         }
     }
+
+	public void addUserGroup(int userId, ByteBuffer data) {
+		int groupId = data.getInt();// lit positions 1-4, curseur passe à 5
+		int addedUserId = data.getInt();// lit positions 5-8, curseur passe à 9
+
+		GroupMsg g = server.getGroup(groupId);
+	    if (g == null) return;
+
+		//////vérifie si qd tajoutes un membre il faut que tu sois owner
+		g.addMemberIfOwner(ownerId, server.getUser(memberId));
+	}
 }
 
 

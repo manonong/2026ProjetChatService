@@ -85,4 +85,9 @@ public class GroupMsg implements PacketProcessor {
 		//avant de supprimer un groupe, permet de retirer le groupe du répertoire des membres
 	}
 
+	public boolean addMemberIfOwner(int requesterId, UserMsg newMember) {
+    if (owner.getId() != requesterId) return false;
+    return addMember(newMember);
+}
+
 }
